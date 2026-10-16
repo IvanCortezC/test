@@ -8,6 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.cortez.ivan.ivancortez.controllerApp.UsuarioController">
     <padding>
@@ -35,6 +36,6 @@
             <TableColumn fx:id="colNumero" text="Numero"/>
             <TableColumn fx:id="colEdad" text="Edad"/>
             <TableColumn fx:id="colEstado" text="Estado Civil"/>
-        <columns>
-    <TableView>
+        </columns>
+    </TableView>
 </VBox>
