@@ -9,4 +9,6 @@ module com.cortez.ivan.ivancortez {
     exports com.cortez.ivan.ivancortez;
     exports com.cortez.ivan.ivancortez.controllerApp;
     opens com.cortez.ivan.ivancortez.controllerApp to javafx.fxml;
+
+    opens com.cortez.ivan.ivancortez.dto to javafx.base;
 }

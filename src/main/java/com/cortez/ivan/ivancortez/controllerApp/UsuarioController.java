@@ -2,87 +2,154 @@ package com.cortez.ivan.ivancortez.controllerApp;
 
 import com.cortez.ivan.ivancortez.UsuarioModel.UsuarioModel;
 import com.cortez.ivan.ivancortez.dto.UsuarioDto;
-import javafx.beans.Observable;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.text.Text;
 
 public class UsuarioController {
 
-    UsuarioDto usuarioEliminar;
-    @FXML
-    private TableView tableUsuarios;
+    @FXML private TableView<UsuarioDto> tableUsuarios;
+    @FXML private TableColumn<UsuarioDto, Integer> colId;
+    @FXML private TableColumn<UsuarioDto, String> colNombre;
+    @FXML private TableColumn<UsuarioDto, String> colCorreo;
+    @FXML private TableColumn<UsuarioDto, Integer> colNumero;
+    @FXML private TableColumn<UsuarioDto, Integer> colEdad;
+    @FXML private TableColumn<UsuarioDto, String> colEstado;
 
-    @FXML
-    private TableColumn colId;
+    @FXML private TextField txtId;
+    @FXML private TextField txtNombre;
+    @FXML private TextField txtCorreo;
+    @FXML private TextField txtNumero;
+    @FXML private TextField txtEdad;
+    @FXML private TextField txtEstado;
 
-    @FXML
-    private TableColumn colNombre;
+    @FXML private Button btnAgregar;
+    @FXML private Button btnModificar;
+    @FXML private Button btnEliminar;
 
-    @FXML
-    private TableColumn colCorreo;
-
-    @FXML
-    private TableColumn colNumero;
-
-    @FXML
-    private TableColumn colEdad;
-
-    @FXML
-    private TableColumn colEstado;
-
-    @FXML
-    public TextField txtId;
-
-    @FXML
-    public Button btnEliminar;
-
-    private UsuarioModel usuariosModel;
-    private ObservableList<UsuarioDto> usuarios;
-
-    private Integer idUsuario = 0;
-
-    @FXML
-    public TextField txtNombre;
-
-    @FXML
-    public TextField txtCorreo;
-
-    @FXML
-    public TextField txtNumero;
-
-    @FXML
-    public TextField txtEdad;
-
-    @FXML
-    public TextField txtEstado;
+    private final UsuarioModel usuarioModel = new UsuarioModel();
+    private int siguienteId = 1;
 
     @FXML
     public void initialize() {
-    this.colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-    this.colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-    this.colCorreo.setCellValueFactory(new PropertyValueFactory<>("correo"));
-    this.colNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
-    this.colEdad.setCellValueFactory(new PropertyValueFactory<>("edad"));
-    this.colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colCorreo.setCellValueFactory(new PropertyValueFactory<>("correo"));
+        colNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
+        colEdad.setCellValueFactory(new PropertyValueFactory<>("edad"));
+        colEstado.setCellValueFactory(new PropertyValueFactory<>("estadoCivil"));
 
-    this.usuarios = FXCollections.observableArrayList();
-    this.tableUsuarios.setItems(this.usuarios);
+        tableUsuarios.setItems(usuarioModel.getUsuarios());
+
+        tableUsuarios.getSelectionModel().selectedItemProperty().addListener((obs, anterior, seleccionado) -> {
+            boolean haySeleccion = seleccionado != null;
+            btnModificar.setDisable(!haySeleccion);
+            btnEliminar.setDisable(!haySeleccion);
+            btnAgregar.setDisable(haySeleccion);
+
+            if (haySeleccion) {
+                mostrarUsuario(seleccionado);
+            } else {
+                limpiarCampos();
+            }
+        });
     }
-
 
     @FXML
-    public void handleAgregar(MouseEvent mouseEvent) {
-
+    public void handleAgregar(ActionEvent event) {
+        UsuarioDto usuario = new UsuarioDto();
+        if (!leerFormulario(usuario)) {
+            return;
+        }
+        usuario.setId(siguienteId++);
+        usuarioModel.agregarUsuario(usuario);
+        limpiarCampos();
     }
 
     @FXML
-    public void handleEliminar(MouseEvent mouseEvent) {
-
+    public void handleModificar(ActionEvent event) {
+        UsuarioDto seleccionado = tableUsuarios.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            return;
+        }
+        if (!leerFormulario(seleccionado)) {
+            return;
+        }
+        tableUsuarios.refresh();
     }
-    
+
+    @FXML
+    public void handleEliminar(ActionEvent event) {
+        UsuarioDto seleccionado = tableUsuarios.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            return;
+        }
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION,
+                "¿Eliminar a " + seleccionado.getNombre() + "?",
+                ButtonType.YES, ButtonType.NO);
+        confirmacion.setHeaderText(null);
+        confirmacion.showAndWait()
+                .filter(boton -> boton == ButtonType.YES)
+                .ifPresent(boton -> usuarioModel.eliminarUsuario(seleccionado));
+    }
+
+    @FXML
+    public void handleLimpiar(ActionEvent event) {
+        tableUsuarios.getSelectionModel().clearSelection(); // el listener limpia los campos
+        limpiarCampos();
+    }
+
+
+    private void mostrarUsuario(UsuarioDto usuario) {
+        txtId.setText(String.valueOf(usuario.getId()));
+        txtNombre.setText(usuario.getNombre());
+        txtCorreo.setText(usuario.getCorreo());
+        txtNumero.setText(String.valueOf(usuario.getNumero()));
+        txtEdad.setText(String.valueOf(usuario.getEdad()));
+        txtEstado.setText(usuario.getEstadoCivil());
+    }
+
+    private void limpiarCampos() {
+        txtId.clear();
+        txtNombre.clear();
+        txtCorreo.clear();
+        txtNumero.clear();
+        txtEdad.clear();
+        txtEstado.clear();
+    }
+
+    private boolean leerFormulario(UsuarioDto destino) {
+        String nombre = txtNombre.getText().trim();
+        String correo = txtCorreo.getText().trim();
+        String estado = txtEstado.getText().trim();
+
+        if (nombre.isEmpty() || correo.isEmpty()) {
+            mostrarAlerta("El nombre y el correo son obligatorios");
+            return false;
+        }
+
+        int numero;
+        int edad;
+        try {
+            numero = Integer.parseInt(txtNumero.getText().trim());
+            edad = Integer.parseInt(txtEdad.getText().trim());
+        } catch (NumberFormatException e) {
+            mostrarAlerta("El número y la edad deben ser números enteros");
+            return false;
+        }
+
+        destino.setNombre(nombre);
+        destino.setCorreo(correo);
+        destino.setNumero(numero);
+        destino.setEdad(edad);
+        destino.setEstadoCivil(estado);
+        return true;
+    }
+
+    private void mostrarAlerta(String mensaje) {
+        Alert alerta = new Alert(Alert.AlertType.WARNING, mensaje, ButtonType.OK);
+        alerta.setHeaderText(null);
+        alerta.showAndWait();
+    }
 }
